@@ -1,51 +1,49 @@
 import java.util.Scanner;
-public class Rept{
+import java.util.Stack;
 
+// PalindromeChecker class encapsulating palindrome logic
+class PalindromeChecker {
 
+    // Method to check palindrome using Stack
+    public boolean checkPalindrome(String input) {
 
+        Stack<Character> stack = new Stack<>();
+        String cleaned = input.replaceAll("\\s+", "").toLowerCase();
 
-    public static void main(String[] args){
-        /*
-        UC10
-         */
-        Scanner scanner = new Scanner(System.in);
-
-        System.out.println("=== UC9: Recursive Palindrome Checker ===");
-        System.out.print("Enter a string: ");
-        String input = scanner.nextLine();
-
-        // Preprocess input
-        String processedInput = input.replaceAll("\\s+", "").toLowerCase();
-
-        boolean result = isPalindrome(processedInput, 0, processedInput.length() - 1);
-
-        if (result) {
-            System.out.println("Result: The given string IS a Palindrome.");
-        } else {
-            System.out.println("Result: The given string is NOT a Palindrome.");
-        }
-
-        scanner.close();
-    }
-
-    // Recursive Method
-    private static boolean isPalindrome(String str, int start, int end) {
-
-        // Base Condition
-        if (start >= end) {
-            return true;
+        // Push characters to stack
+        for (int i = 0; i < cleaned.length(); i++) {
+            stack.push(cleaned.charAt(i));
         }
 
         // Compare characters
-        if (str.charAt(start) != str.charAt(end)) {
-            return false;
+        for (int i = 0; i < cleaned.length(); i++) {
+            if (cleaned.charAt(i) != stack.pop()) {
+                return false;
+            }
         }
 
-        // Recursive Call
-        return isPalindrome(str, start + 1, end - 1);
+        return true;
+    }
+}
 
+public class Rept{
 
+    public static void main(String[] args) {
 
+        Scanner scanner = new Scanner(System.in);
+        PalindromeChecker checker = new PalindromeChecker();
 
+        System.out.println("Enter a string to check if it is a palindrome:");
+        String input = scanner.nextLine();
+
+        boolean result = checker.checkPalindrome(input);
+
+        if (result) {
+            System.out.println("The given string is a Palindrome.");
+        } else {
+            System.out.println("The given string is NOT a Palindrome.");
+        }
+
+        scanner.close();
     }
 }
