@@ -1,84 +1,58 @@
 import java.util.*;
 
-/*
- =====================================================
- MAIN CLASS - UseCase12PalindromeCheckerApp
- =====================================================
- Use Case 12: Strategy Pattern for Palindrome Algorithms
-
- Description:
- Demonstrates how different palindrome validation
- algorithms can be selected dynamically at runtime
- using the Strategy Design Pattern.
-
- At this stage the application:
- - Defines a common PalindromeStrategy interface
- - Implements StackStrategy and DequeStrategy
- - Injects the strategy at runtime
- - Executes the chosen algorithm
- =====================================================
-*/
-
 public class Rept{
 
     public static void main(String[] args) {
 
         Scanner scanner = new Scanner(System.in);
 
-        System.out.println("==== Palindrome Checker (Strategy Pattern) ====");
         System.out.print("Enter a string: ");
         String input = scanner.nextLine();
 
-        System.out.println("\nChoose Algorithm:");
-        System.out.println("1. Stack Strategy");
-        System.out.println("2. Deque Strategy");
-        System.out.print("Enter choice: ");
+        System.out.println("\n---- Performance Comparison ----");
 
-        int choice = scanner.nextInt();
+        // Reverse Method
+        long start1 = System.nanoTime();
+        boolean result1 = reverseMethod(input);
+        long end1 = System.nanoTime();
+        long time1 = end1 - start1;
 
-        PalindromeStrategy strategy;
+        // Stack Method
+        long start2 = System.nanoTime();
+        boolean result2 = stackMethod(input);
+        long end2 = System.nanoTime();
+        long time2 = end2 - start2;
 
-        if (choice == 1) {
-            strategy = new StackStrategy();
-        } else {
-            strategy = new DequeStrategy();
-        }
+        // Deque Method
+        long start3 = System.nanoTime();
+        boolean result3 = dequeMethod(input);
+        long end3 = System.nanoTime();
+        long time3 = end3 - start3;
 
-        PalindromeChecker checker = new PalindromeChecker(strategy);
+        System.out.println("\nReverse Method:");
+        System.out.println("Is Palindrome: " + result1);
+        System.out.println("Execution Time: " + time1 + " ns");
 
-        boolean result = checker.check(input);
+        System.out.println("\nStack Method:");
+        System.out.println("Is Palindrome: " + result2);
+        System.out.println("Execution Time: " + time2 + " ns");
 
-        if (result)
-            System.out.println("Result: Palindrome");
-        else
-            System.out.println("Result: Not a Palindrome");
+        System.out.println("\nDeque Method:");
+        System.out.println("Is Palindrome: " + result3);
+        System.out.println("Execution Time: " + time3 + " ns");
 
         scanner.close();
     }
-}
 
-/*
- =====================================================
- INTERFACE - PalindromeStrategy
- =====================================================
- Contract for all palindrome algorithms
-*/
+    // Method 1: Reverse String
+    public static boolean reverseMethod(String input) {
 
-interface PalindromeStrategy {
+        String reversed = new StringBuilder(input).reverse().toString();
+        return input.equals(reversed);
+    }
 
-    boolean isPalindrome(String input);
-}
-
-/*
- =====================================================
- CLASS - StackStrategy
- =====================================================
- Uses Stack data structure
-*/
-
-class StackStrategy implements PalindromeStrategy {
-
-    public boolean isPalindrome(String input) {
+    // Method 2: Stack
+    public static boolean stackMethod(String input) {
 
         Stack<Character> stack = new Stack<>();
 
@@ -94,18 +68,9 @@ class StackStrategy implements PalindromeStrategy {
 
         return input.equals(reversed);
     }
-}
 
-/*
- =====================================================
- CLASS - DequeStrategy
- =====================================================
- Uses Deque data structure
-*/
-
-class DequeStrategy implements PalindromeStrategy {
-
-    public boolean isPalindrome(String input) {
+    // Method 3: Deque
+    public static boolean dequeMethod(String input) {
 
         Deque<Character> deque = new ArrayDeque<>();
 
@@ -121,25 +86,5 @@ class DequeStrategy implements PalindromeStrategy {
         }
 
         return true;
-    }
-}
-
-/*
- =====================================================
- CLASS - PalindromeChecker (Context Class)
- =====================================================
- Uses injected strategy
-*/
-
-class PalindromeChecker {
-
-    private PalindromeStrategy strategy;
-
-    public PalindromeChecker(PalindromeStrategy strategy) {
-        this.strategy = strategy;
-    }
-
-    public boolean check(String input) {
-        return strategy.isPalindrome(input);
     }
 }
