@@ -1,69 +1,57 @@
+import java.io.*;
 import java.util.*;
 
-class BookingRequest {
+class Booking implements Serializable {
     private String guestName;
-    private int roomsRequested;
+    private int roomsBooked;
 
-    public BookingRequest(String guestName, int roomsRequested) {
+    public Booking(String guestName, int roomsBooked) {
         this.guestName = guestName;
-        this.roomsRequested = roomsRequested;
+        this.roomsBooked = roomsBooked;
     }
 
     public String getGuestName() {
         return guestName;
     }
 
-    public int getRoomsRequested() {
-        return roomsRequested;
+    public int getRoomsBooked() {
+        return roomsBooked;
+    }
+
+    public String toString() {
+        return guestName + " booked " + roomsBooked + " room(s)";
     }
 }
 
-class HotelInventory {
-    private int availableRooms;
+class HotelData implements Serializable {
+    int availableRooms;
+    List<Booking> bookings;
 
-    public HotelInventory(int rooms) {
+    public HotelData(int rooms, List<Booking> bookings) {
         this.availableRooms = rooms;
+        this.bookings = bookings;
     }
+}
 
-    public synchronized boolean bookRooms(String guest, int rooms) {
-        if (rooms <= availableRooms) {
-            System.out.println(guest + " booking " + rooms + " room(s)...");
-            availableRooms -= rooms;
-            System.out.println("Booking confirmed for " + guest + " | Rooms left: " + availableRooms);
-            return true;
-        } else {
-            System.out.println("Not enough rooms for " + guest + " | Requested: " + rooms + " | Available: " + availableRooms);
-            return false;
+class PersistenceService {
+    private static final String FILE_NAME = "hotel_data.ser";
+
+    public static void save(HotelData data) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(FILE_NAME))) {
+            oos.writeObject(data);
+            System.out.println("Data saved successfully.");
+        } catch (Exception e) {
+            System.out.println("Error saving data.");
         }
     }
-}
 
-class BookingProcessor implements Runnable {
-    private Queue<BookingRequest> bookingQueue;
-    private HotelInventory inventory;
-
-    public BookingProcessor(Queue<BookingRequest> queue, HotelInventory inventory) {
-        this.bookingQueue = queue;
-        this.inventory = inventory;
-    }
-
-    public void run() {
-        while (true) {
-            BookingRequest request;
-
-            synchronized (bookingQueue) {
-                if (bookingQueue.isEmpty()) {
-                    break;
-                }
-                request = bookingQueue.poll();
-            }
-
-            if (request != null) {
-                inventory.bookRooms(
-                        request.getGuestName(),
-                        request.getRoomsRequested()
-                );
-            }
+    public static HotelData load() {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(FILE_NAME))) {
+            System.out.println("Data loaded successfully.");
+            return (HotelData) ois.readObject();
+        } catch (Exception e) {
+            System.out.println("No previous data found. Starting fresh.");
+            return new HotelData(10, new ArrayList<>());
         }
     }
 }
@@ -72,32 +60,44 @@ public class Rept {
 
     public static void main(String[] args) {
 
-        Queue<BookingRequest> bookingQueue = new LinkedList<>();
+        HotelData data = PersistenceService.load();
 
-        bookingQueue.add(new BookingRequest("Alice", 2));
-        bookingQueue.add(new BookingRequest("Bob", 3));
-        bookingQueue.add(new BookingRequest("Charlie", 4));
-        bookingQueue.add(new BookingRequest("David", 1));
-        bookingQueue.add(new BookingRequest("Eve", 2));
+        Scanner sc = new Scanner(System.in);
 
-        HotelInventory inventory = new HotelInventory(7);
+        while (true) {
+            System.out.println("\n1. Book Room\n2. View Bookings\n3. Exit");
+            int choice = sc.nextInt();
 
-        Thread t1 = new Thread(new BookingProcessor(bookingQueue, inventory));
-        Thread t2 = new Thread(new BookingProcessor(bookingQueue, inventory));
-        Thread t3 = new Thread(new BookingProcessor(bookingQueue, inventory));
+            if (choice == 1) {
+                System.out.print("Enter guest name: ");
+                String name = sc.next();
+                System.out.print("Enter rooms required: ");
+                int rooms = sc.nextInt();
 
-        t1.start();
-        t2.start();
-        t3.start();
+                if (rooms <= data.availableRooms) {
+                    data.availableRooms -= rooms;
+                    data.bookings.add(new Booking(name, rooms));
+                    System.out.println("Booking successful. Rooms left: " + data.availableRooms);
+                } else {
+                    System.out.println("Not enough rooms available.");
+                }
 
-        try {
-            t1.join();
-            t2.join();
-            t3.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            } else if (choice == 2) {
+                if (data.bookings.isEmpty()) {
+                    System.out.println("No bookings found.");
+                } else {
+                    for (Booking b : data.bookings) {
+                        System.out.println(b);
+                    }
+                }
+
+            } else if (choice == 3) {
+                PersistenceService.save(data);
+                System.out.println("Exiting system...");
+                break;
+            }
         }
 
-        System.out.println("All bookings processed.");
+        sc.close();
     }
 }
